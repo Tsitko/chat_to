@@ -1,0 +1,99 @@
+/**
+ * Styles for ProgressBar component
+ */
+
+.progress-bar-container {
+  width: 100%;
+  margin: 8px 0;
+}
+
+.progress-bar-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.progress-bar-label {
+  font-size: 13px;
+  color: #333;
+  font-weight: 500;
+}
+
+.progress-bar-percentage {
+  font-size: 12px;
+  color: #666;
+  font-weight: 600;
+}
+
+.progress-bar-track {
+  width: 100%;
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+  position: relative;
+}
+
+/* Status-based colors */
+.progress-bar-fill.status-pending {
+  background-color: #9e9e9e;
+}
+
+.progress-bar-fill.status-indexing {
+  background-color: #0088cc;
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.15) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.15) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 20px 20px;
+  animation: progress-stripes 1s linear infinite;
+}
+
+.progress-bar-fill.status-completed {
+  background-color: #28a745;
+}
+
+.progress-bar-fill.status-failed {
+  background-color: #dc3545;
+}
+
+@keyframes progress-stripes {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 20px 0;
+  }
+}
+
+/* Error message */
+.progress-bar-error {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #dc3545;
+}
+
+/* Accessibility: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .progress-bar-fill {
+    transition: none;
+  }
+
+  .progress-bar-fill.status-indexing {
+    animation: none;
+  }
+}

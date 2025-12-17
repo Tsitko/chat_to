@@ -1,0 +1,412 @@
+/**
+ * Main application styles with Telegram-like layout.
+ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.app {
+  display: flex;
+  height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Sidebar - 20% width */
+.sidebar {
+  width: 20%;
+  background-color: #f5f5f5;
+  border-right: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.create-character-btn {
+  margin: 15px;
+  padding: 12px;
+  background-color: #0088cc;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.create-character-btn:hover {
+  background-color: #006699;
+}
+
+/* Character List */
+.character-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.character-list .loading-state,
+.character-list .error-state,
+.character-list .empty-state {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+}
+
+.character-list .retry-button {
+  display: block;
+  margin: 10px auto 0;
+  padding: 8px 16px;
+  background-color: #0088cc;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.character-list .retry-button:hover {
+  background-color: #006699;
+}
+
+.character-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #ddd;
+  transition: background-color 0.2s;
+}
+
+.character-item:hover {
+  background-color: #e8e8e8;
+}
+
+.character-item.selected {
+  background-color: #0088cc;
+  color: white;
+}
+
+.character-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin-right: 12px;
+  object-fit: cover;
+}
+
+.character-name {
+  font-weight: 500;
+  font-size: 15px;
+}
+
+/* Main area - 80% width */
+.main-area {
+  width: 80%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Character header - 10% height */
+.header-section {
+  height: 10%;
+  border-bottom: 1px solid #ddd;
+  background-color: #fff;
+}
+
+.character-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  height: 100%;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+}
+
+.header-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin-right: 15px;
+  object-fit: cover;
+}
+
+.header-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.header-name {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.header-books {
+  font-size: 13px;
+  color: #666;
+}
+
+.edit-button {
+  padding: 8px 16px;
+  background-color: #0088cc;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.edit-button:hover {
+  background-color: #006699;
+}
+
+/* Chat section - 60% height */
+.chat-section {
+  height: 60%;
+  overflow-y: auto;
+  background-color: #e5ddd5;
+}
+
+.chat-window {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-window .empty-state {
+  text-align: center;
+  color: #999;
+  font-size: 16px;
+  margin-top: 50px;
+}
+
+.message {
+  margin-bottom: 12px;
+  max-width: 70%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.user-message {
+  align-self: flex-end;
+  background-color: #dcf8c6;
+  margin-left: auto;
+}
+
+.assistant-message {
+  align-self: flex-start;
+  background-color: #fff;
+}
+
+.message-content {
+  margin-bottom: 4px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.message-time {
+  font-size: 11px;
+  color: #666;
+  text-align: right;
+}
+
+/* Input section - 30% height */
+.input-section {
+  height: 30%;
+  border-top: 1px solid #ddd;
+  background-color: #fff;
+}
+
+.message-input {
+  height: 100%;
+  padding: 15px;
+}
+
+.message-input form {
+  display: flex;
+  gap: 10px;
+  height: 100%;
+}
+
+.message-textarea {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: none;
+  font-family: inherit;
+  font-size: 15px;
+}
+
+.send-button {
+  padding: 12px 24px;
+  background-color: #0088cc;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.send-button:hover:not(:disabled) {
+  background-color: #006699;
+}
+
+.send-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.no-selection {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 1.5rem;
+  color: #999;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-content h2 {
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+.dropzone {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.dropzone:hover {
+  border-color: #0088cc;
+  background-color: #f9f9f9;
+}
+
+.dropzone.active {
+  border-color: #0088cc;
+  background-color: #e8f4f8;
+}
+
+.dropzone p {
+  margin: 0;
+  color: #666;
+}
+
+.books-list {
+  margin-top: 10px;
+  list-style: none;
+  padding: 0;
+}
+
+.books-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #f5f5f5;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.books-list button {
+  padding: 4px 8px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.books-list button:hover {
+  background-color: #c82333;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 25px;
+}
+
+.submit-button {
+  padding: 10px 20px;
+  background-color: #0088cc;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.submit-button:hover {
+  background-color: #006699;
+}
+
+.cancel-button {
+  padding: 10px 20px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.cancel-button:hover {
+  background-color: #5a6268;
+}

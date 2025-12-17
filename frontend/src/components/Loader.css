@@ -1,0 +1,157 @@
+/**
+ * Styles for Loader component
+ */
+
+.loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Spinner variant */
+.loader-spinner {
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top-color: var(--primary-color, #0088cc);
+  border-radius: 50%;
+  animation: loader-spin 0.8s linear infinite;
+}
+
+.loader-spinner.loader-sm {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+.loader-spinner.loader-md {
+  width: 32px;
+  height: 32px;
+  border-width: 3px;
+}
+
+.loader-spinner.loader-lg {
+  width: 48px;
+  height: 48px;
+  border-width: 4px;
+}
+
+@keyframes loader-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dots variant */
+.loader-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.loader-dot {
+  background-color: var(--primary-color, #0088cc);
+  border-radius: 50%;
+  animation: loader-bounce 1.4s infinite ease-in-out both;
+}
+
+.loader-dots.loader-sm .loader-dot {
+  width: 6px;
+  height: 6px;
+}
+
+.loader-dots.loader-md .loader-dot {
+  width: 10px;
+  height: 10px;
+}
+
+.loader-dots.loader-lg .loader-dot {
+  width: 14px;
+  height: 14px;
+}
+
+.loader-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loader-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes loader-bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Inline variant */
+.loader-inline {
+  display: inline-flex;
+}
+
+/* Overlay variant */
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  gap: 16px;
+}
+
+.loader-overlay .loader-spinner {
+  border-color: rgba(255, 255, 255, 0.2);
+  border-top-color: #ffffff;
+}
+
+/* Text styling */
+.loader-text {
+  color: #666;
+  font-size: 14px;
+  margin-left: 8px;
+}
+
+.loader-overlay .loader-text {
+  color: #ffffff;
+  font-size: 16px;
+  margin-left: 0;
+  margin-top: 8px;
+}
+
+/* Screen reader only text */
+.loader-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Accessibility: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .loader-spinner {
+    animation-duration: 2s;
+  }
+
+  .loader-dot {
+    animation: none;
+    opacity: 0.7;
+  }
+}

@@ -1,0 +1,250 @@
+/**
+ * Styles for AssistantMessage component.
+ * Assistant messages are displayed on the left side with gray styling and Markdown support.
+ */
+
+.assistant-message-container {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  animation: slideInLeft 0.3s ease-out;
+}
+
+.assistant-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  margin-right: 12px;
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+  border: 1px solid #404040;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.assistant-avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.assistant-avatar-initials {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  user-select: none;
+}
+
+.assistant-message-bubble {
+  max-width: 95%;
+  background: #2d2d2d;
+  color: #e4e4e4;
+  border: 1px solid #404040;
+  border-radius: 4px 18px 18px 18px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  position: relative;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.assistant-message-header {
+  margin-bottom: 6px;
+}
+
+.assistant-message-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #b0b0b0;
+}
+
+.assistant-message-content {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #e4e4e4;
+}
+
+/* Markdown styling */
+.assistant-message-content h1,
+.assistant-message-content h2,
+.assistant-message-content h3,
+.assistant-message-content h4,
+.assistant-message-content h5,
+.assistant-message-content h6 {
+  margin-top: 10px;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #f0f0f0;
+}
+
+.assistant-message-content h1 {
+  font-size: 24px;
+}
+
+.assistant-message-content h2 {
+  font-size: 20px;
+}
+
+.assistant-message-content h3 {
+  font-size: 18px;
+}
+
+.assistant-message-content h4 {
+  font-size: 16px;
+}
+
+.assistant-message-content p {
+  margin-top: 0;
+  margin-bottom: 6px;
+}
+
+.assistant-message-content p:last-child {
+  margin-bottom: 0;
+}
+
+.assistant-message-content ul,
+.assistant-message-content ol {
+  margin: 6px 0;
+  padding-left: 24px;
+}
+
+.assistant-message-content li {
+  margin-bottom: 4px;
+  display: list-item;
+}
+
+/* Force all children in list items to be inline to prevent line breaks */
+.assistant-message-content li > * {
+  display: inline;
+  margin: 0;
+}
+
+.assistant-message-content li p,
+.assistant-message-content li > p:first-child,
+.assistant-message-content li > p:last-child {
+  display: inline !important;
+  margin: 0 !important;
+}
+
+.assistant-message-content code {
+  background: #1a1a1a;
+  border: 1px solid #404040;
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  color: #ff79c6;
+}
+
+.assistant-message-content pre {
+  background: #1a1a1a;
+  border: 1px solid #404040;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 8px 0;
+  overflow-x: auto;
+}
+
+.assistant-message-content pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #f8f8f2;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.assistant-message-content blockquote {
+  border-left: 4px solid #505050;
+  margin: 8px 0;
+  padding-left: 16px;
+  color: #b0b0b0;
+  font-style: italic;
+}
+
+.assistant-message-content a {
+  color: #0088cc;
+  text-decoration: none;
+}
+
+.assistant-message-content a:hover {
+  text-decoration: underline;
+}
+
+.assistant-message-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8px 0;
+}
+
+.assistant-message-content th,
+.assistant-message-content td {
+  border: 1px solid #404040;
+  padding: 8px;
+  text-align: left;
+}
+
+.assistant-message-content th {
+  background: #1a1a1a;
+  font-weight: 600;
+}
+
+.assistant-message-content strong {
+  font-weight: 600;
+}
+
+.assistant-message-content em {
+  font-style: italic;
+}
+
+.assistant-message-content hr {
+  border: none;
+  border-top: 1px solid #404040;
+  margin: 10px 0;
+}
+
+.assistant-message-timestamp {
+  font-size: 11px;
+  color: #888;
+  text-align: left;
+  margin-top: 6px;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .assistant-message-bubble {
+    max-width: 98%;
+  }
+
+  .assistant-avatar {
+    width: 32px;
+    height: 32px;
+    margin-right: 8px;
+  }
+
+  .assistant-avatar-initials {
+    font-size: 14px;
+  }
+}
+
+/* Accessibility: Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .assistant-message-container {
+    animation: none;
+  }
+}
+
+/* Dark theme is now the default style above */
