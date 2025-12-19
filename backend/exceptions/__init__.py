@@ -13,6 +13,18 @@ from .base_exceptions import (
     LLMError,
     IndexingError,
     StorageError,
+    GroupNotFoundError,
+    InvalidGroupDataError,
+)
+from .tts_exceptions import (
+    TTSServiceUnavailableError,
+    TTSTimeoutError,
+    TTSProcessingError,
+)
+from .stt_exceptions import (
+    STTServiceUnavailableError,
+    STTTimeoutError,
+    STTProcessingError,
 )
 
 __all__ = [
@@ -26,4 +38,12 @@ __all__ = [
     "LLMError",
     "IndexingError",
     "StorageError",
+    "GroupNotFoundError",
+    "InvalidGroupDataError",
+    "TTSServiceUnavailableError",
+    "TTSTimeoutError",
+    "TTSProcessingError",
+    "STTServiceUnavailableError",
+    "STTTimeoutError",
+    "STTProcessingError",
 ]

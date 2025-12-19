@@ -8,6 +8,7 @@ import axios, { AxiosInstance } from 'axios';
 import type { Character, CharacterCreate, CharacterUpdate } from '../types/character';
 import type { MessagesResponse, MessageCreate, MessageResponse } from '../types/message';
 import type { IndexingStatusResponse } from '../types/indexing';
+import type { Group, GroupCreate, GroupUpdate, GroupMessageRequest, GroupMessageResponse } from '../types/group';
 
 class ApiService {
   private client: AxiosInstance;
@@ -178,6 +179,143 @@ class ApiService {
   async getIndexingStatus(characterId: string): Promise<IndexingStatusResponse> {
     const response = await this.client.get<IndexingStatusResponse>(
       `/characters/${characterId}/indexing-status/`
+    );
+    return response.data;
+  }
+
+  // ========== Group API Methods ==========
+
+  /**
+   * Get all groups.
+   *
+   * @returns Promise resolving to array of groups
+   */
+  async getGroups(): Promise<Group[]> {
+    const response = await this.client.get<Group[]>('/groups/');
+    return response.data;
+  }
+
+  /**
+   * Get a specific group by ID.
+   *
+   * @param groupId - ID of the group to retrieve
+   * @returns Promise resolving to the group object
+   */
+  async getGroup(groupId: string): Promise<Group> {
+    const response = await this.client.get<Group>(`/groups/${groupId}`);
+    return response.data;
+  }
+
+  /**
+   * Create a new group.
+   *
+   * @param data - Group creation data (name, character_ids, optional avatar)
+   * @returns Promise resolving to the created group
+   */
+  async createGroup(data: GroupCreate): Promise<Group> {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('character_ids', JSON.stringify(data.character_ids));
+
+    if (data.avatar) {
+      formData.append('avatar', data.avatar);
+    }
+
+    const response = await this.client.post<Group>('/groups/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  }
+
+  /**
+   * Update an existing group.
+   *
+   * @param groupId - ID of the group to update
+   * @param data - Group update data (name, character_ids, or avatar)
+   * @returns Promise resolving to the updated group
+   */
+  async updateGroup(groupId: string, data: GroupUpdate): Promise<Group> {
+    const formData = new FormData();
+
+    if (data.name) {
+      formData.append('name', data.name);
+    }
+
+    if (data.character_ids) {
+      formData.append('character_ids', JSON.stringify(data.character_ids));
+    }
+
+    if (data.avatar) {
+      formData.append('avatar', data.avatar);
+    }
+
+    const response = await this.client.put<Group>(`/groups/${groupId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  }
+
+  /**
+   * Delete a group.
+   *
+   * @param groupId - ID of the group to delete
+   * @returns Promise resolving when deletion is complete
+   */
+  async deleteGroup(groupId: string): Promise<void> {
+    await this.client.delete(`/groups/${groupId}`);
+  }
+
+  /**
+   * Get group avatar URL.
+   *
+   * @param groupId - ID of the group
+   * @returns URL string for the group's avatar
+   */
+  getGroupAvatarUrl(groupId: string): string {
+    return `${this.client.defaults.baseURL}/groups/${groupId}/avatar`;
+  }
+
+  /**
+   * Get messages for a group.
+   *
+   * @param groupId - ID of the group
+   * @param limit - Maximum number of messages to retrieve
+   * @param offset - Offset for pagination
+   * @returns Promise resolving to messages response
+   */
+  async getGroupMessages(
+    groupId: string,
+    limit: number = 50,
+    offset: number = 0
+  ): Promise<MessagesResponse> {
+    const response = await this.client.get<MessagesResponse>(
+      `/groups/${groupId}/messages/`,
+      {
+        params: { limit, offset },
+      }
+    );
+    return response.data;
+  }
+
+  /**
+   * Send a message to a group.
+   * This triggers responses from all characters in the group.
+   *
+   * Backend API: POST /api/groups/messages
+   * Request body: { messages: Message[], character_ids: string[] }
+   * Response: { responses: CharacterResponse[], statistics: {...} }
+   *
+   * @param request - Group message request containing messages and character IDs
+   * @returns Promise resolving to group message response with character responses
+   */
+  async sendGroupMessage(request: GroupMessageRequest): Promise<GroupMessageResponse> {
+    const response = await this.client.post<GroupMessageResponse>(
+      '/groups/messages/',
+      request
     );
     return response.data;
   }

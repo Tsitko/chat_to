@@ -62,6 +62,39 @@ class MessageDB(Base):
     character = relationship("CharacterDB", back_populates="messages")
 
 
+class GroupDB(Base):
+    """SQLAlchemy model for Group table."""
+
+    __tablename__ = 'groups'
+
+    id = Column(String, primary_key=True)
+    name = Column(String, nullable=False)
+    character_ids = Column(Text, nullable=False)  # JSON array of character IDs
+    avatar_url = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    messages = relationship("GroupMessageDB", back_populates="group", cascade="all, delete-orphan")
+
+
+class GroupMessageDB(Base):
+    """SQLAlchemy model for GroupMessage table."""
+
+    __tablename__ = 'group_messages'
+
+    id = Column(String, primary_key=True)
+    group_id = Column(String, ForeignKey('groups.id'), nullable=False)
+    role = Column(String, nullable=False)  # 'user' or 'assistant'
+    content = Column(Text, nullable=False)
+    character_id = Column(String, nullable=True)  # NULL for user messages, set for assistant messages
+    character_name = Column(String, nullable=True)  # NULL for user messages, set for assistant messages
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationship
+    group = relationship("GroupDB", back_populates="messages")
+
+
 class Database:
     """Database connection manager."""
 

@@ -36,6 +36,9 @@ BOOKS_DIR: str = "books"
 # Avatars storage subdirectory
 AVATARS_DIR: str = "avatars"
 
+# Groups storage subdirectory
+GROUPS_DIR: str = "groups"
+
 # ChromaDB storage subdirectory
 CHROMA_DIR: str = os.getenv("CHROMA_DIR", "chroma")
 

@@ -9,12 +9,12 @@
 ## Key Components
 
 ### ChatService
-- **Purpose**: Orchestrate complete message flow
-- **Entities**: User messages, assistant responses, context, prompts
+- **Purpose**: Orchestrate complete message flow with emotion detection
+- **Entities**: User messages, assistant responses, context, prompts, emotions
 - **I/O**:
   - Input: User message content
-  - Output: MessageResponse (user + assistant messages)
-- **Dependencies**: knowledge_base, llm, storage, models
+  - Output: MessageResponse (user + assistant messages with emotions)
+- **Dependencies**: knowledge_base, llm (OllamaClient, PromptBuilder, EmotionDetector), storage, models
 
 ### IndexingService
 - **Purpose**: Manage asynchronous book indexing tasks
@@ -38,14 +38,18 @@ class IndexingService:
 
 ## Data Flow
 
-### Chat Flow
+### Chat Flow (with Emotion Detection and Context Reuse)
 1. Receive user message
-2. Search both KBs for context
-3. Get recent message history
-4. Build prompt with context
-5. Generate LLM response
-6. Save both messages
-7. Index user message asynchronously
+2. Get recent message history
+3. **Search both KBs for context** (books KB + conversations KB)
+4. **Detect emotions with books_context** (EmotionDetector analyzes chat + character knowledge)
+5. Calculate dynamic temperature based on emotions (0.1/0.3/0.5)
+6. **Build prompt with context and emotions** (reuses books_context from step 3)
+7. Generate LLM response with dynamic temperature
+8. Save both messages with detected emotions
+9. Index user message asynchronously into conversations KB
+
+**Key Optimization**: books_context retrieved in step 3 is reused in steps 4 and 6, eliminating duplicate KB queries.
 
 ### Indexing Flow
 1. Parse document file

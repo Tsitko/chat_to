@@ -104,28 +104,32 @@
   margin-bottom: 0;
 }
 
-.assistant-message-content ul,
-.assistant-message-content ol {
+/* Custom list styles to avoid <p> tag issues */
+.custom-ordered-list,
+.custom-unordered-list {
   margin: 6px 0;
-  padding-left: 24px;
+  padding-left: 0;
 }
 
-.assistant-message-content li {
+.custom-list-item {
+  display: flex;
+  align-items: baseline;
   margin-bottom: 4px;
-  display: list-item;
+  line-height: 1.6;
 }
 
-/* Force all children in list items to be inline to prevent line breaks */
-.assistant-message-content li > * {
-  display: inline;
-  margin: 0;
+.custom-list-item-number,
+.custom-list-item-bullet {
+  flex-shrink: 0;
+  margin-right: 8px;
+  color: #e4e4e4;
+  display: inline-block;
 }
 
-.assistant-message-content li p,
-.assistant-message-content li > p:first-child,
-.assistant-message-content li > p:last-child {
-  display: inline !important;
-  margin: 0 !important;
+.custom-list-item-content {
+  flex: 1;
+  color: #e4e4e4;
+  display: inline-block;
 }
 
 .assistant-message-content code {
@@ -205,11 +209,18 @@
   margin: 10px 0;
 }
 
+.assistant-message-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  gap: 12px;
+}
+
 .assistant-message-timestamp {
   font-size: 11px;
   color: #888;
   text-align: left;
-  margin-top: 6px;
 }
 
 @keyframes slideInLeft {

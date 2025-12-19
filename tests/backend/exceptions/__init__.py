@@ -1,0 +1,1 @@
+"""Backend exceptions tests package."""

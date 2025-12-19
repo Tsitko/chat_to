@@ -9,7 +9,8 @@
 | File | Description |
 |------|-------------|
 | `ollama_client.py` | Ollama API client for chat completions |
-| `prompt_builder.py` | Build system and user prompts with context |
+| `prompt_builder.py` | Build system and user prompts with context and emotions |
+| `emotion_detector.py` | Detect character emotions using LLM analysis with KB context |
 
 ## Key Components
 
@@ -66,6 +67,51 @@
 ```
 
 **Dependencies:** models.Message
+
+### `emotion_detector.py`
+**Purpose:** Detect character emotions based on chat history and knowledge base context
+
+**Key Class:** `EmotionDetector`
+
+**Key Methods:**
+- `detect_emotions(character_name: str, messages: List[Message], context: str) -> Optional[Emotions]`
+- `_build_emotion_prompt(character_name: str, messages: List[Message], context: str) -> str`
+- `_parse_emotion_response(llm_response: str) -> Emotions`
+
+**Emotion Prompt Template:**
+```
+Ты {character_name}.
+Твои знания по обсуждаемой теме: {context}
+Сообщения из чата: {messages}
+Формат ответа:
+<emotions>
+<fear>0-100</fear>
+<anger>0-100</anger>
+<sadness>0-100</sadness>
+<disgust>0-100</disgust>
+<joy>0-100</joy>
+</emotions>
+
+fear - страх. Он тем больше, чем сильнее сообщения из чата противоречат твоим принципам и убеждениям, разрушают их.
+anger - злость. Он тем больше, чем сильнее сообщения из чата пытаются заставить тебя изменить свои принципы и убеждения.
+sadness - печаль. Он тем больше, чем сильнее динамика сообщений из чата уходит всё дальше от твоих идей, всё необратимее изменяют их.
+disgust - отвращение. Он тем больше, чем сильнее сообщения из чата противоречат твоим нормам морали и этики.
+joy - радость. Он тем больше, чем сильнее сообщения из чата подтверждают твои принципы и убеждения, укрепляют их.
+```
+
+**Implementation:**
+- Uses knowledge base context to ground emotion detection in character's actual knowledge
+- Analyzes chat history in context of character's documented beliefs and principles
+- Parses LLM response using regex to extract emotion values (0-100)
+- Returns `None` on failure for graceful degradation (default temperature used)
+- Uses low temperature (0.3) for structured output consistency
+
+**Context Integration:**
+- **Input**: Chat history + books KB context (character's knowledge)
+- **Purpose**: Emotions based on how chat aligns/conflicts with character's documented views
+- **Reuse**: Same KB context passed to both emotion detection and response generation
+
+**Dependencies:** models.Message, models.Emotions, llm.OllamaClient
 
 ## Interface Signatures
 
@@ -137,19 +183,93 @@ class PromptBuilder:
     @staticmethod
     def format_knowledge_chunks(chunks: List[str]) -> str:
         """Format KB search results as context."""
+
+# EmotionDetector
+class EmotionDetector:
+    def __init__(self, ollama_client: OllamaClient):
+        """Initialize emotion detector with LLM client."""
+
+    async def detect_emotions(
+        self,
+        character_name: str,
+        messages: List[Message],
+        context: str
+    ) -> Optional[Emotions]:
+        """
+        Detect emotions based on chat history and KB context.
+
+        Args:
+            character_name: Name of the character
+            messages: Chat history to analyze
+            context: Knowledge base context (books KB)
+
+        Returns:
+            Detected emotions or None if detection fails
+        """
+
+    def _build_emotion_prompt(
+        self,
+        character_name: str,
+        messages: List[Message],
+        context: str
+    ) -> str:
+        """Build emotion detection prompt with KB context."""
+
+    def _parse_emotion_response(self, llm_response: str) -> Emotions:
+        """Parse LLM response to extract emotion values."""
 ```
 
 ## Data Flow
 
-**Response Generation Flow:**
-1. `PromptBuilder.build_prompts()` constructs prompts
-2. System prompt: character name + KB context
-3. User prompt: previous discussions + chat history + task
-4. `OllamaClient.generate_response()` sends to Ollama
-5. Ollama generates response as character
-6. Response returned to chat service
+**Complete Message Processing Flow (with Emotion Detection):**
+1. User sends message
+2. ChatService retrieves recent messages from DB
+3. **Knowledge Base Search** → [books_context, conversations_context]
+4. **Emotion Detection** (uses books_context):
+   - `EmotionDetector.detect_emotions(name, messages, books_context)`
+   - LLM analyzes emotions with character's knowledge
+   - Returns `Emotions` object or `None`
+5. **Response Generation** (reuses books_context):
+   - `PromptBuilder.build_prompts()` constructs prompts with emotions
+   - System prompt: character name + books_context + emotions
+   - User prompt: conversations_context + chat history + current message
+   - `OllamaClient.generate_response()` sends to Ollama with dynamic temperature
+   - Ollama generates response as character
+6. Response and emotions saved to DB
 
-**Prompt Construction Flow:**
+**Key Optimization**: books_context fetched once, reused for both emotion detection and response generation.
+
+**Context Reuse Pattern:**
+```
+Knowledge Base Search (once)
+    ↓
+[books_context] ─────┬──→ EmotionDetector.detect_emotions()
+                     │       ↓
+                     │   [Emotions detected with KB grounding]
+                     │       ↓
+                     └──→ PromptBuilder.build_system_prompt()
+                             ↓
+                         [system_prompt with context + emotions]
+                             ↓
+                         OllamaClient.generate_response(dynamic_temp)
+```
+
+**Emotion Detection Flow:**
+```
+Recent Messages + Books Context
+    ↓
+EmotionDetector._build_emotion_prompt(name, messages, context)
+    ↓
+[emotion_prompt: "Ты {name}. Твои знания: {context}. Сообщения: {messages}"]
+    ↓
+OllamaClient.generate_response(emotion_prompt, temperature=0.3)
+    ↓
+EmotionDetector._parse_emotion_response(llm_response)
+    ↓
+[Emotions(fear=X, anger=Y, sadness=Z, disgust=A, joy=B)]
+```
+
+**Response Generation Flow:**
 ```
 Knowledge Base Search
     ↓
@@ -159,19 +279,19 @@ PromptBuilder.format_knowledge_chunks()
     ↓
 [formatted context string]
     ↓
-PromptBuilder.build_system_prompt(name, context)
+PromptBuilder.build_system_prompt(name, context, emotions)
     ↓
-[system_prompt: "Ты {name}. Твои знания: {context}"]
+[system_prompt: "Ты {name}. Твои знания: {context}. Твои эмоции: {emotions}"]
 
 Conversation KB Search + Recent Messages
     ↓
 [previous discussion chunks] + [recent messages]
     ↓
-PromptBuilder.build_user_prompt(prev_disc, messages)
+PromptBuilder.build_user_prompt(prev_disc, messages, current_msg)
     ↓
 [user_prompt with full context]
     ↓
-OllamaClient.generate_response(system_prompt, user_prompt)
+OllamaClient.generate_response(system_prompt, user_prompt, dynamic_temperature)
     ↓
 [character response]
 ```

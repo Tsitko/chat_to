@@ -1,0 +1,51 @@
+/**
+ * Styles for EmotionDisplay component.
+ * Displays emotions horizontally with color-coded values.
+ */
+
+.emotion-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.emotion-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.emotion-label {
+  color: #b0b0b0;
+  font-weight: 500;
+}
+
+.emotion-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Color classes for emotion intensity */
+.emotion-low {
+  color: #22c55e;
+}
+
+.emotion-medium {
+  color: #f97316;
+}
+
+.emotion-high {
+  color: #ef4444;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .emotion-display {
+    font-size: 12px;
+    gap: 10px;
+  }
+}

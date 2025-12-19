@@ -24,6 +24,12 @@
 3. **MessageInput** - Input field for sending messages
 4. **CharacterHeader** - Character info and edit button
 5. **CharacterModal** - Create/edit character form with file uploads
+6. **AssistantMessage** - Left-aligned message with Markdown support (ReactMarkdown + remark-gfm)
+7. **UserMessage** - Right-aligned user message with Markdown support
+8. **Modal** - Reusable modal component
+9. **Loader** - Loading spinner component
+10. **ProgressBar** - Progress indicator
+11. **IndexingStatusDisplay** - Shows book indexing progress
 
 ### Services
 
@@ -50,3 +56,21 @@
 - Axios (HTTP client)
 - React Dropzone (file uploads)
 - React Hook Form + Zod (forms + validation)
+- React Markdown + remark-gfm (Markdown rendering with GitHub Flavored Markdown)
+
+## Component Details
+
+### AssistantMessage
+- **Purpose**: Renders character messages with Markdown support
+- **Features**:
+  - Custom list rendering (ordered/unordered) with proper numbering
+  - Flattens `<p>` tags inside list items to prevent layout issues
+  - Trims leading whitespace from list items
+  - Dark theme styling with syntax highlighting for code blocks
+  - Avatar display with initials fallback
+- **Dependencies**: ReactMarkdown, remark-gfm
+
+### UserMessage
+- **Purpose**: Renders user messages with Markdown support
+- **Features**: Right-aligned styling, Markdown rendering, timestamp
+- **Dependencies**: ReactMarkdown, remark-gfm

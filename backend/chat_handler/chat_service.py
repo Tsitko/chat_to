@@ -5,13 +5,13 @@ This module orchestrates the complete chat flow including KB search and LLM resp
 Depends on: knowledge_base, llm, storage, models
 """
 
-from typing import List
+from typing import List, Optional
 import asyncio
 
 from knowledge_base import KnowledgeBaseManager
-from llm import OllamaClient, PromptBuilder
+from llm import OllamaClient, PromptBuilder, EmotionDetector
 from storage import MessageRepository
-from models import Message, MessageResponse
+from models import Message, MessageResponse, Emotions
 from exceptions import LLMError
 
 
@@ -47,6 +47,7 @@ class ChatService:
         self.ollama_client = ollama_client
         self.message_repository = message_repository
         self.prompt_builder = PromptBuilder()
+        self.emotion_detector = EmotionDetector(ollama_client)
 
     async def process_message(self, user_message_content: str) -> MessageResponse:
         """
@@ -73,16 +74,17 @@ class ChatService:
             created_at=datetime.utcnow()
         )
 
-        # 2. Generate assistant response
-        assistant_response = await self._generate_response(user_message_content)
+        # 2. Generate assistant response with emotions
+        assistant_response, emotions = await self._generate_response(user_message_content)
 
-        # 3. Create assistant message
+        # 3. Create assistant message with emotions
         assistant_message = Message(
             id=str(uuid4()),
             character_id=self.character_id,
             role="assistant",
             content=assistant_response,
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
+            emotions=emotions
         )
 
         # 4. Save both messages
@@ -141,63 +143,91 @@ class ChatService:
         )
         return messages
 
-    async def _generate_response(self, user_message: str) -> str:
+    async def _generate_response(self, user_message: str) -> tuple[str, Optional[Emotions]]:
         """
-        Generate assistant response using LLM.
+        Generate assistant response using LLM with emotion detection.
 
         Args:
             user_message: User message content
 
         Returns:
-            str: Generated response
+            tuple[str, Optional[Emotions]]: (Generated response, detected emotions or None)
 
         Raises:
             LLMError: If generation fails
         """
-        print(f"[DEBUG] Starting _generate_response for message: {user_message[:50]}...")
+        print(f"[EMOTION] Starting emotion detection for character: {self.character_name}")
 
-        # 1. Search knowledge bases for context
-        print("[DEBUG] Searching knowledge bases...")
-        books_context, conversations_context = await self._search_knowledge_bases(user_message)
-        print(f"[DEBUG] Books context length: {len(books_context)}, Conversations context length: {len(conversations_context)}")
-        print(f"[DEBUG] Books context preview: {books_context[:200]}...")
-        print(f"[DEBUG] Conversations context preview: {conversations_context[:200]}...")
-
-        # 2. Get recent messages for chat history
-        print("[DEBUG] Getting recent messages...")
+        # 1. Get recent messages
         recent_messages = await self._get_recent_messages(count=5)
-        print(f"[DEBUG] Found {len(recent_messages)} recent messages")
-        if recent_messages:
-            print("[DEBUG] Chat history:")
-            for msg in recent_messages:
-                role_name = "User" if msg.role == "user" else "Assistant"
-                print(f"[DEBUG]   {role_name}: {msg.content[:100]}...")
-        else:
-            print("[DEBUG] Chat history: No previous messages")
+        print(f"[EMOTION] Found {len(recent_messages)} recent messages")
 
-        # 3. Build prompts
-        print("[DEBUG] Building prompts...")
+        # 2. Search knowledge bases FIRST (reordered to happen before emotion detection)
+        books_context, conversations_context = await self._search_knowledge_bases(user_message)
+
+        # 3. Detect emotions WITH books_context (context-aware emotion detection)
+        emotions, temperature = await self._detect_emotions(recent_messages, books_context)
+        print(f"[EMOTION] Detection result - emotions: {emotions}, temperature: {temperature}")
+
+        # 4. Build prompts WITH emotions (reuse same books_context, no re-query)
         system_prompt, user_prompt = self.prompt_builder.build_prompts(
             character_name=self.character_name,
             context=books_context,
             previous_discussion=conversations_context,
             messages=recent_messages,
-            current_question=user_message
+            current_question=user_message,
+            emotions=emotions
         )
-        print(f"[DEBUG] System prompt length: {len(system_prompt)}, User prompt length: {len(user_prompt)}")
-        print(f"[DEBUG] Current question being passed to LLM: {user_message[:100]}...")
-        print(f"[DEBUG] User prompt preview:\n{user_prompt[:500]}...")
+        print(f"[EMOTION] System prompt includes emotions: {emotions is not None}")
+        if emotions:
+            print(f"[EMOTION] Emotion values in prompt: fear={emotions.fear}, anger={emotions.anger}, sadness={emotions.sadness}, disgust={emotions.disgust}, joy={emotions.joy}")
 
-        # 4. Generate response using LLM
-        print("[DEBUG] Calling LLM...")
-        response = await self.ollama_client.generate_response(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            temperature=0.7
-        )
-        print(f"[DEBUG] LLM response received, length: {len(response)}")
+        # 5. Generate response with dynamic temperature
+        print(f"[EMOTION] Generating response with temperature: {temperature}")
+        try:
+            response = await self.ollama_client.generate_response(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                temperature=temperature
+            )
+        except Exception as e:
+            raise LLMError(f"Failed to generate response: {str(e)}")
 
-        return response
+        return response, emotions
+
+    async def _detect_emotions(self, recent_messages: List[Message],
+                              books_context: str) -> tuple[Optional[Emotions], float]:
+        """
+        Detect emotions based on chat history, knowledge context, and calculate optimal temperature.
+
+        Args:
+            recent_messages: Recent chat history
+            books_context: Knowledge base context about the topic being discussed
+
+        Returns:
+            tuple[Optional[Emotions], float]: (Detected emotions or None, optimal temperature)
+        """
+        print(f"[EMOTION] _detect_emotions called with {len(recent_messages)} messages")
+        try:
+            emotions = await self.emotion_detector.detect_emotions(
+                self.character_name, recent_messages, books_context
+            )
+            print(f"[EMOTION] EmotionDetector returned: {emotions}")
+
+            if emotions:
+                temperature = emotions.calculate_optimal_temperature()
+                print(f"[EMOTION] Calculated temperature from emotions: {temperature}")
+                return emotions, temperature
+            else:
+                # Fallback to default temperature if detection fails
+                print(f"[EMOTION] No emotions detected, using default temperature 0.7")
+                return None, 0.7
+        except Exception as e:
+            # Log error but continue with default temperature
+            print(f"[EMOTION] Emotion detection error: {e}")
+            import traceback
+            traceback.print_exc()
+            return None, 0.7
 
     async def _save_messages(self, user_message: Message,
                             assistant_message: Message) -> None:

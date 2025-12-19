@@ -10,13 +10,13 @@ import aiofiles
 from typing import Optional
 from pathlib import Path
 
-from configs import DATA_DIR, CHARACTERS_DIR, BOOKS_DIR, AVATARS_DIR
+from configs import DATA_DIR, CHARACTERS_DIR, BOOKS_DIR, AVATARS_DIR, GROUPS_DIR
 from exceptions import StorageError
 
 
 class FileStorage:
     """
-    Manages file storage operations for characters, books, and avatars.
+    Manages file storage operations for characters, books, avatars, and groups.
 
     This class handles all file system operations including saving, retrieving,
     and deleting files in the appropriate directories.
@@ -36,6 +36,7 @@ class FileStorage:
         self.characters_dir = self.base_dir / CHARACTERS_DIR
         self.books_dir = self.base_dir / BOOKS_DIR
         self.avatars_dir = self.base_dir / AVATARS_DIR
+        self.groups_dir = self.base_dir / GROUPS_DIR
 
         # Create base directories
         try:
@@ -43,6 +44,7 @@ class FileStorage:
             self.characters_dir.mkdir(parents=True, exist_ok=True)
             self.books_dir.mkdir(parents=True, exist_ok=True)
             self.avatars_dir.mkdir(parents=True, exist_ok=True)
+            self.groups_dir.mkdir(parents=True, exist_ok=True)
         except Exception as e:
             raise StorageError(f"Failed to create base directories: {str(e)}")
 
@@ -249,3 +251,77 @@ class FileStorage:
             str: Path to character's directory
         """
         return str(self.characters_dir / character_id)
+
+    async def save_group_avatar(
+        self,
+        group_id: str,
+        file_content: bytes,
+        filename: str
+    ) -> str:
+        """
+        Save avatar file for a group.
+
+        Args:
+            group_id: Unique identifier of the group
+            file_content: Binary content of the avatar file
+            filename: Original filename with extension
+
+        Returns:
+            str: Path to the saved avatar file
+
+        Raises:
+            StorageError: If file save operation fails
+        """
+        try:
+            group_dir = self.groups_dir / group_id
+            group_dir.mkdir(parents=True, exist_ok=True)
+
+            safe_filename = Path(filename).name
+            file_path = group_dir / safe_filename
+
+            # Use context manager syntax which works for both real aiofiles and properly mocked versions
+            async with aiofiles.open(file_path, 'wb') as f:
+                await f.write(file_content)
+
+            return str(file_path)
+        except Exception as e:
+            raise StorageError(f"Failed to save group avatar: {str(e)}")
+
+    async def get_group_avatar_path(self, group_id: str) -> Optional[str]:
+        """
+        Get the path to a group's avatar file.
+
+        Args:
+            group_id: Unique identifier of the group
+
+        Returns:
+            Optional[str]: Path to avatar file if it exists, None otherwise
+        """
+        group_dir = self.groups_dir / group_id
+        if not group_dir.exists():
+            return None
+
+        for file_path in group_dir.iterdir():
+            if file_path.is_file():
+                return str(file_path)
+
+        return None
+
+    async def delete_group_data(self, group_id: str) -> None:
+        """
+        Delete all data for a group (avatar, etc.).
+
+        Args:
+            group_id: Unique identifier of the group
+
+        Raises:
+            StorageError: If directory deletion fails
+        """
+        try:
+            import shutil
+
+            group_dir = self.groups_dir / group_id
+            if group_dir.exists():
+                shutil.rmtree(group_dir)
+        except Exception as e:
+            raise StorageError(f"Failed to delete group data: {str(e)}")

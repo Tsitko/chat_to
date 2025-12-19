@@ -53,3 +53,13 @@ class IndexingError(ChatToException):
 class StorageError(ChatToException):
     """Raised when file storage operation fails."""
     pass
+
+
+class GroupNotFoundError(ChatToException):
+    """Raised when a group is not found."""
+    pass
+
+
+class InvalidGroupDataError(ChatToException):
+    """Raised when group data validation fails."""
+    pass

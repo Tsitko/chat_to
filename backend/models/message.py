@@ -5,9 +5,11 @@ This module defines the Message model for chat operations.
 """
 
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 from pydantic import BaseModel, Field
 import uuid
+
+from .emotions import Emotions
 
 
 class Message(BaseModel):
@@ -17,6 +19,9 @@ class Message(BaseModel):
     role: Literal["user", "assistant"]
     content: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    character_id: Optional[str] = Field(default=None, description="ID of the character this message belongs to")
+    character_name: Optional[str] = Field(default=None, description="Name of the character (for group chat display)")
+    emotions: Optional[Emotions] = Field(default=None, description="Detected emotions (assistant messages only)")
 
 
 class MessageCreate(BaseModel):

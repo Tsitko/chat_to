@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { useMessageStoreEnhanced } from '../store/messageStoreEnhanced';
 import { Loader } from './Loader';
+import { RecordButton } from './RecordButton';
 
 interface MessageInputProps {
   characterId: string | null;
@@ -69,15 +70,18 @@ export const MessageInput: React.FC<MessageInputProps> = ({ characterId }) => {
           aria-invalid={!!displayError}
           aria-describedby={displayError ? 'message-error' : undefined}
         />
-        <button
-          type="submit"
-          disabled={!message.trim() || isDisabled}
-          className="send-button"
-          aria-label="Send message"
-          aria-disabled={!message.trim() || isDisabled}
-        >
-          {isSending ? <Loader variant="inline" size="sm" text="Sending..." /> : 'Send'}
-        </button>
+        <div className="button-group">
+          <RecordButton characterId={characterId} disabled={isDisabled} />
+          <button
+            type="submit"
+            disabled={!message.trim() || isDisabled}
+            className="send-button"
+            aria-label="Send message"
+            aria-disabled={!message.trim() || isDisabled}
+          >
+            {isSending ? <Loader variant="inline" size="sm" text="Sending..." /> : 'Send'}
+          </button>
+        </div>
       </form>
       {displayError && (
         <div

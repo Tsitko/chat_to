@@ -163,6 +163,14 @@ async def send_message(
         # 3. Process message
         response = await chat_service.process_message(message.content)
 
+        # Log the response to verify emotions are included
+        print(f"[API] Response being sent to client:")
+        print(f"[API] User message ID: {response.user_message.id}")
+        print(f"[API] Assistant message ID: {response.assistant_message.id}")
+        print(f"[API] Assistant message has emotions: {response.assistant_message.emotions is not None}")
+        if response.assistant_message.emotions:
+            print(f"[API] Emotions: {response.assistant_message.emotions}")
+
         return response
 
     except CharacterNotFoundError as e:

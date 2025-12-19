@@ -76,6 +76,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ characterId, character }
               characterName={character?.name || 'Assistant'}
               avatarUrl={character?.avatar_url}
               messageId={message.id}
+              emotions={message.emotions}
             />
           )
         ))
