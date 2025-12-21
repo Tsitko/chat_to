@@ -4,14 +4,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A chat application for conversing with historical figures using RAG (Retrieval Augmented Generation) based on their books. The system uses local Ollama LLMs with ChromaDB vector databases for knowledge retrieval.
+A chat application for conversing with historical figures using RAG (Retrieval Augmented Generation) based on their books. The system uses LM Studio for chat LLM inference and Ollama for embeddings with ChromaDB vector databases for knowledge retrieval.
 
 **Tech Stack:**
 - **Backend:** Python with Uvicorn server (port 1310)
 - **Frontend:** React + TypeScript + Vite
-- **LLM:** Ollama (qwen2.5:7b for chat, qwen-embeddings-* for embeddings)
+- **LLM:** LM Studio (qwen/qwen3-30b-a3b-2507 for chat), Ollama (qwen-embeddings-* for embeddings)
 - **Vector DB:** ChromaDB with SQLite (separate DB per character)
 - **API:** REST endpoints for characters, books, and messages
+
+## CRITICAL: Python Environment
+
+**ALWAYS use the venv in the project root:**
+- All Python code must be run from the venv in the project root directory
+- All Python dependencies must be installed in the venv in the project root directory
+- Before running any Python commands: `source venv/bin/activate` (Linux/Mac) or `venv\Scripts\activate` (Windows)
+- Never install dependencies globally or in other venv locations
 
 ## Development Workflow
 
@@ -132,7 +140,7 @@ Each character has TWO ChromaDB databases:
 ## Configuration Files
 
 All configs externalized to `configs/` folder:
-- **ollama_models.py** - Model names (qwen2.5:7b, qwen-embeddings-indexer, qwen-embeddings-kb)
+- **ollama_models.py** - Model names (qwen/qwen3-30b-a3b-2507, qwen-embeddings-indexer, qwen-embeddings-kb)
 - **server_config.py** - Server port (default: 1310)
 - **chunking_config.py** - Chunk size (3000) and overlap (10%)
 

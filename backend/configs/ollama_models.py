@@ -5,7 +5,7 @@ This module centralizes all model name configurations for the application.
 """
 
 # Chat LLM model for generating responses
-CHAT_MODEL: str = "qwen2.5:7b"
+CHAT_MODEL: str = "qwen/qwen3-30b-a3b-2507"
 
 # Embedding model for indexing documents
 EMBEDDINGS_INDEXER_MODEL: str = "qwen-embeddings-indexer"

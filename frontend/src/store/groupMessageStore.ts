@@ -25,6 +25,8 @@ interface GroupMessageStore {
   isLoading: Record<string, boolean>;
   /** Loading state for send operations, keyed by group ID */
   isSending: Record<string, boolean>;
+  /** Loading state for clear operations, keyed by group ID */
+  isClearing: Record<string, boolean>;
   /** Error messages keyed by group ID */
   error: Record<string, string | null>;
 
@@ -64,12 +66,30 @@ interface GroupMessageStore {
   ) => Promise<void>;
 
   /**
-   * Clear all messages for a group.
+   * Clear all messages for a group (local state only).
    * Resets messages[groupId] to empty array.
+   *
+   * NOTE: This only clears local state. Use clearGroupMessagesWithAPI()
+   * to clear both database and local state.
    *
    * @param groupId - ID of the group
    */
   clearGroupMessages: (groupId: string) => void;
+
+  /**
+   * Clear all messages for a group (database + local state).
+   * This is the "New Chat" functionality for groups.
+   *
+   * Process:
+   * 1. Set isClearing[groupId] = true
+   * 2. Call DELETE /api/groups/{groupId}/messages
+   * 3. Clear local state messages[groupId] = []
+   * 4. Set isClearing[groupId] = false
+   *
+   * @param groupId - ID of the group
+   * @throws Error if API call fails
+   */
+  clearGroupMessagesWithAPI: (groupId: string) => Promise<void>;
 
   /**
    * Add character responses to a group's message history.
@@ -89,6 +109,7 @@ export const useGroupMessageStore = create<GroupMessageStore>((set, get) => ({
   messages: {},
   isLoading: {},
   isSending: {},
+  isClearing: {},
   error: {},
 
   // Actions implementation
@@ -205,6 +226,39 @@ export const useGroupMessageStore = create<GroupMessageStore>((set, get) => ({
         [groupId]: [],
       },
     });
+  },
+
+  clearGroupMessagesWithAPI: async (groupId: string) => {
+    // Set clearing state
+    set((state) => ({
+      isClearing: { ...state.isClearing, [groupId]: true },
+      error: { ...state.error, [groupId]: null },
+    }));
+
+    try {
+      // Import API service
+      const { apiService } = await import('../services/api');
+
+      // Call backend API to delete messages from database
+      await apiService.clearGroupMessages(groupId);
+
+      // Clear local state after successful API call
+      const { messages } = get();
+      set({
+        messages: {
+          ...messages,
+          [groupId]: [],
+        },
+        isClearing: { ...get().isClearing, [groupId]: false },
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to clear messages';
+      set((state) => ({
+        error: { ...state.error, [groupId]: errorMessage },
+        isClearing: { ...state.isClearing, [groupId]: false },
+      }));
+      throw error; // Re-throw for component error handling
+    }
   },
 
   addCharacterResponses: (groupId: string, responses: CharacterResponse[]) => {

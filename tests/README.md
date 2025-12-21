@@ -23,7 +23,7 @@ All tests were written **BEFORE implementation** following TDD best practices:
 
 1. **Unit Tests**: Test each class in isolation with mocked dependencies
 2. **Integration Tests**: Test interactions between classes with real dependencies where possible
-3. **E2E Tests**: Test complete user journeys with NO MOCKS (real Ollama, real ChromaDB, real files)
+3. **E2E Tests**: Test complete user journeys with NO MOCKS (real LM Studio, real Ollama embeddings, real ChromaDB, real files)
 
 ## Test Coverage Summary
 
@@ -117,7 +117,7 @@ Integration tests verifying class interactions:
 - `test_send_message_and_get_response`: Sends message, receives LLM response
   - Verifies response structure (user_message, assistant_message)
   - Confirms response content is meaningful (>10 chars)
-  - Uses REAL Ollama LLM (qwen2.5:7b)
+  - Uses REAL LM Studio LLM (qwen/qwen3-30b-a3b-2507)
 - `test_message_appears_in_history`: Sends 2 messages, verifies chat history
   - Confirms messages appear in chronological order
   - Verifies total count includes both user and assistant messages
@@ -146,7 +146,7 @@ Integration tests verifying class interactions:
 
 **Critical Requirements**:
 - All E2E tests use **NO MOCKS**
-- Real Ollama LLM (qwen2.5:7b)
+- Real LM Studio LLM (qwen/qwen3-30b-a3b-2507)
 - Real embeddings (qwen-embeddings-indexer, qwen-embeddings-kb)
 - Real ChromaDB vector databases
 - Real file operations with test data from `Гегель/` folder
@@ -156,14 +156,17 @@ Integration tests verifying class interactions:
 
 ### Prerequisites
 
-1. **Ollama must be running** with required models:
+1. **LM Studio must be running** with OpenAI-compatible API:
+   - Host: `http://192.168.1.16:1234` (or `LM_STUDIO_URL`)
+   - Model: `qwen/qwen3-30b-a3b-2507`
+
+2. **Ollama must be running** with required models (embeddings):
    ```bash
-   ollama pull qwen2.5:7b
    ollama pull qwen-embeddings-indexer
    ollama pull qwen-embeddings-kb
    ```
 
-2. **Install dependencies**:
+3. **Install dependencies**:
    ```bash
    cd /home/denis/Projects/chat_to
    source venv/bin/activate
@@ -189,16 +192,16 @@ pytest tests/ -v
 # Unit tests only (fast, no external dependencies)
 pytest tests/unit/ -m unit
 
-# Integration tests (requires Ollama)
+# Integration tests (requires Ollama embeddings)
 pytest tests/integration/ -m integration
 
-# E2E tests (slow, requires Ollama)
+# E2E tests (slow, requires LM Studio + Ollama embeddings)
 pytest tests/e2e/ -m e2e
 
 # Skip slow tests
 pytest tests/ -m "not slow"
 
-# Run only tests requiring Ollama
+# Run only tests requiring Ollama embeddings
 pytest tests/ -m requires_ollama
 ```
 
@@ -242,7 +245,7 @@ Tests are marked with pytest markers for selective running:
 - `@pytest.mark.integration` - Integration tests (multiple components)
 - `@pytest.mark.e2e` - End-to-end tests (full user journeys)
 - `@pytest.mark.slow` - Tests that take >5 seconds
-- `@pytest.mark.requires_ollama` - Tests requiring Ollama to be running
+- `@pytest.mark.requires_ollama` - Tests requiring Ollama embeddings to be running
 - `@pytest.mark.asyncio` - Async tests (automatically handled)
 
 ## Test Data
@@ -280,7 +283,7 @@ While the core test suite is comprehensive, consider adding:
 4. `test_character_repository.py` - Database CRUD operations
 5. `test_message_repository.py` - Message persistence and pagination
 6. `test_chroma_client.py` - ChromaDB operations
-7. `test_ollama_client.py` - LLM generation and streaming
+7. `test_ollama_client.py` - LLM generation and streaming (LM Studio)
 8. `test_prompt_builder.py` - Prompt construction
 9. `test_chat_service.py` - Chat orchestration
 10. `test_indexing_service.py` - Async indexing coordination
@@ -371,17 +374,16 @@ Update tests when:
 
 ### Common Issues
 
-1. **Ollama not running**
+1. **LM Studio not running**
    ```
-   Error: Connection refused to localhost:11434
-   Solution: Start Ollama: ollama serve
+   Error: Connection refused to 192.168.1.16:1234
+   Solution: Start LM Studio and enable the API server
    ```
 
-2. **Models not pulled**
+2. **Ollama embeddings not pulled**
    ```
    Error: Model not found
    Solution: Pull models:
-     ollama pull qwen2.5:7b
      ollama pull qwen-embeddings-indexer
      ollama pull qwen-embeddings-kb
    ```

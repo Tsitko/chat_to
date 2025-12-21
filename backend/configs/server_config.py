@@ -12,8 +12,11 @@ HOST: str = os.getenv("HOST", "0.0.0.0")
 # Server port
 PORT: int = int(os.getenv("PORT", "1310"))
 
-# Ollama server URL
+# Ollama server URL (embeddings)
 OLLAMA_URL: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
+
+# LM Studio OpenAI-compatible API URL (chat completions)
+LM_STUDIO_URL: str = os.getenv("LM_STUDIO_URL", "http://192.168.1.16:1234")
 
 # Maximum file upload size in bytes (100 MB)
 MAX_UPLOAD_SIZE: int = 100 * 1024 * 1024

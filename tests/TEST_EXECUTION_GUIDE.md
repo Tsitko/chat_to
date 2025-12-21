@@ -9,10 +9,12 @@ Before running tests, ensure:
 - [ ] Python 3.12+ installed
 - [ ] Virtual environment activated: `source venv/bin/activate`
 - [ ] Dependencies installed: `pip install -r backend/requirements.txt`
-- [ ] Ollama installed and running: `ollama serve`
-- [ ] Required models pulled:
+- [ ] LM Studio running with OpenAI-compatible API
+  - Host: `http://192.168.1.16:1234` (or `LM_STUDIO_URL`)
+  - Model: `qwen/qwen3-30b-a3b-2507`
+- [ ] Ollama installed and running (embeddings): `ollama serve`
+- [ ] Required embedding models pulled:
   ```bash
-  ollama pull qwen2.5:7b
   ollama pull qwen-embeddings-indexer
   ollama pull qwen-embeddings-kb
   ```
@@ -52,12 +54,12 @@ pytest tests/unit/test_knowledge_base_manager.py -v
 **Expected duration**: 5-15 seconds
 **Expected result**: All tests pass (75+ tests)
 
-### Phase 2: Integration Tests (Requires Ollama)
+### Phase 2: Integration Tests (Requires Ollama embeddings)
 
 Verify component interactions with real dependencies:
 
 ```bash
-# Ensure Ollama is running
+# Ensure Ollama is running (embeddings)
 # Run integration tests
 pytest tests/integration/ -m integration
 
@@ -157,31 +159,30 @@ pytest tests/e2e/ -m e2e --timeout=600
 
 ## Troubleshooting Test Failures
 
-### Ollama Connection Errors
+### LM Studio Connection Errors
 
 ```
-Error: Connection refused to localhost:11434
+Error: Connection refused to 192.168.1.16:1234
 ```
 
 **Solution**:
 ```bash
-# Start Ollama
-ollama serve
+Verify LM Studio is running and the API server is enabled.
 
 # Verify it's running
-curl http://localhost:11434/api/version
+curl http://192.168.1.16:1234/v1/models
 ```
 
 ### Model Not Found Errors
 
 ```
-Error: Model 'qwen2.5:7b' not found
+Error: Model 'qwen/qwen3-30b-a3b-2507' not found
 ```
 
 **Solution**:
 ```bash
-# Pull all required models
-ollama pull qwen2.5:7b
+# Ensure the LM Studio model is loaded and the ID matches the config.
+# For embeddings, pull required Ollama models:
 ollama pull qwen-embeddings-indexer
 ollama pull qwen-embeddings-kb
 
@@ -198,7 +199,7 @@ AssertionError: Book indexing did not complete within timeout
 **Solutions**:
 1. Increase timeout in test (edit test file)
 2. Use smaller test files (only first few pages)
-3. Ensure Ollama has sufficient resources (RAM, CPU)
+3. Ensure LM Studio has sufficient resources (RAM, CPU)
 
 ### Import Errors
 
@@ -261,7 +262,7 @@ ls -la Гегель/
 pytest tests/ -m "not slow"
 ```
 
-### Run Only Tests Requiring Ollama
+### Run Only Tests Requiring Ollama embeddings
 
 ```bash
 pytest tests/ -m requires_ollama
@@ -532,7 +533,7 @@ If tests are failing and you're not sure why:
 2. Run with verbose output: `pytest tests/ -vv -s`
 3. Run single failing test: `pytest path/to/test.py::test_name -vv -s`
 4. Check test logs in `test-results/` if generated
-5. Verify all prerequisites are met (Ollama running, models pulled, etc.)
+5. Verify all prerequisites are met (LM Studio running, Ollama embeddings models pulled, etc.)
 
 ## Test Metrics to Monitor
 

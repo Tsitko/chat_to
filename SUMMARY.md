@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Chat To** is a web application that enables conversations with historical figures using Retrieval Augmented Generation (RAG) based on their books. The system combines local Ollama LLMs with ChromaDB vector databases to create an intelligent, context-aware chat experience where each character responds based on their written works and previous conversations.
+**Chat To** is a web application that enables conversations with historical figures using Retrieval Augmented Generation (RAG) based on their books. The system uses LM Studio for chat LLM inference and Ollama for embeddings, combined with ChromaDB vector databases to create an intelligent, context-aware chat experience where each character responds based on their written works and previous conversations.
 
 ## Architecture
 
@@ -12,8 +12,9 @@
 - Python with FastAPI framework
 - Uvicorn ASGI server (port 1310)
 - ChromaDB for vector storage (SQLite backend)
-- Ollama for LLM inference and embeddings
-  - `qwen2.5:7b` for chat responses
+- LM Studio for LLM inference
+  - `qwen/qwen3-30b-a3b-2507` for chat responses
+- Ollama for embeddings
   - `qwen-embeddings-indexer` for indexing
   - `qwen-embeddings-kb` for search queries
 
@@ -49,7 +50,7 @@ Each character maintains two separate ChromaDB vector databases:
 4. System builds a two-part prompt:
    - System prompt: Character identity + book context
    - User prompt: Previous discussions + conversation history + task
-5. Ollama LLM generates response based on complete context
+5. LM Studio LLM generates response based on complete context
 6. User message is asynchronously indexed into conversations KB
 
 ### Architecture Layers

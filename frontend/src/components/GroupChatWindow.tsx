@@ -57,6 +57,10 @@ export const GroupChatWindow: React.FC<GroupChatWindowProps> = ({
 
   const { characters } = useCharacterStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const hasScrolledToFirstResponse = useRef<boolean>(false);
+  const userHasScrolled = useRef<boolean>(false);
+  const lastMessageCount = useRef<number>(0);
 
   const groupMessages = messages[groupId] || [];
   const isLoadingMessages = isLoading[groupId] || false;
@@ -68,18 +72,67 @@ export const GroupChatWindow: React.FC<GroupChatWindowProps> = ({
     }
   }, [groupId, fetchGroupMessages]);
 
+  // Track manual user scrolling
   useEffect(() => {
-    scrollToLatestMessage();
-  }, [groupMessages]);
+    const chatWindow = messagesEndRef.current?.parentElement;
+    if (!chatWindow) return;
 
-  const scrollToLatestMessage = () => {
-    if (messagesEndRef.current?.previousElementSibling) {
-      messagesEndRef.current.previousElementSibling.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      });
+    const handleScroll = () => {
+      userHasScrolled.current = true;
+    };
+
+    chatWindow.addEventListener('scroll', handleScroll);
+    return () => chatWindow.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Auto-scroll to first assistant response after user message
+  useEffect(() => {
+    if (groupMessages.length === 0) return;
+
+    // Reset scroll flag when new user message is detected
+    if (groupMessages.length > lastMessageCount.current) {
+      const lastMessage = groupMessages[groupMessages.length - 1];
+      if (lastMessage.role === 'user') {
+        hasScrolledToFirstResponse.current = false;
+        userHasScrolled.current = false;
+      }
     }
-  };
+    lastMessageCount.current = groupMessages.length;
+
+    // Don't scroll if user manually scrolled or already scrolled to first response
+    if (userHasScrolled.current || hasScrolledToFirstResponse.current) {
+      return;
+    }
+
+    // Find last user message (using reverse search for ES2020 compatibility)
+    let lastUserMessageIndex = -1;
+    for (let i = groupMessages.length - 1; i >= 0; i--) {
+      if (groupMessages[i].role === 'user') {
+        lastUserMessageIndex = i;
+        break;
+      }
+    }
+    if (lastUserMessageIndex === -1) return;
+
+    // Find first assistant message after it
+    const firstResponseIndex = groupMessages.findIndex(
+      (m, idx) => idx > lastUserMessageIndex && m.role === 'assistant'
+    );
+
+    if (firstResponseIndex !== -1) {
+      const firstResponseElement = messageRefs.current[firstResponseIndex];
+      if (firstResponseElement) {
+        // Use setTimeout to ensure DOM is fully updated
+        setTimeout(() => {
+          firstResponseElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+          });
+          hasScrolledToFirstResponse.current = true;
+        }, 100);
+      }
+    }
+  }, [groupMessages]);
 
   const getCharacterById = (characterId: string) => {
     return characters.find((c) => c.id === characterId);
@@ -112,28 +165,30 @@ export const GroupChatWindow: React.FC<GroupChatWindowProps> = ({
       role="region"
       aria-label="Group chat messages"
     >
-      {groupMessages.map((message: GroupMessage) => {
+      {groupMessages.map((message: GroupMessage, index: number) => {
         if (message.role === 'user') {
           return (
-            <UserMessage
-              key={message.id}
-              content={message.content}
-              timestamp={message.created_at}
-              messageId={message.id}
-            />
+            <div key={message.id} ref={(el) => (messageRefs.current[index] = el)}>
+              <UserMessage
+                content={message.content}
+                timestamp={message.created_at}
+                messageId={message.id}
+              />
+            </div>
           );
         } else {
           const character = message.character_id ? getCharacterById(message.character_id) : null;
           return (
-            <AssistantMessage
-              key={message.id}
-              content={message.content}
-              timestamp={message.created_at}
-              characterName={message.character_name || character?.name || 'Unknown'}
-              avatarUrl={message.avatar_url || character?.avatar_url}
-              messageId={message.id}
-              emotions={message.emotions}
-            />
+            <div key={message.id} ref={(el) => (messageRefs.current[index] = el)}>
+              <AssistantMessage
+                content={message.content}
+                timestamp={message.created_at}
+                characterName={message.character_name || character?.name || 'Unknown'}
+                avatarUrl={message.avatar_url || character?.avatar_url}
+                messageId={message.id}
+                emotions={message.emotions}
+              />
+            </div>
           );
         }
       })}

@@ -319,6 +319,20 @@ class ApiService {
     );
     return response.data;
   }
+
+  /**
+   * Clear all messages for a group.
+   * This is analogous to "New Chat" functionality for individual characters.
+   *
+   * Backend API: DELETE /api/groups/{groupId}/messages
+   * Response: 204 No Content on success
+   *
+   * @param groupId - ID of the group whose messages to clear
+   * @returns Promise resolving when messages are cleared
+   */
+  async clearGroupMessages(groupId: string): Promise<void> {
+    await this.client.delete(`/groups/${groupId}/messages`);
+  }
 }
 
 export const apiService = new ApiService();

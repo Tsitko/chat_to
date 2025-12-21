@@ -1,35 +1,35 @@
 """
-Ollama client for LLM chat completions.
+OpenAI-compatible client for LM Studio chat completions.
 
-This module provides functionality for generating responses using Ollama LLM.
+This module provides functionality for generating responses using LM Studio.
 Depends on: configs
 """
 
 from typing import List, Dict, Optional
 import httpx
 
-from configs import OLLAMA_URL, CHAT_MODEL
+from configs import LM_STUDIO_URL, CHAT_MODEL
 from exceptions import LLMError
 
 
 class OllamaClient:
     """
-    Client for interacting with Ollama LLM for chat completions.
+    Client for interacting with LM Studio for chat completions.
 
-    This class handles communication with Ollama API for generating
+    This class handles communication with LM Studio API for generating
     character responses based on context and chat history.
     """
 
-    def __init__(self, ollama_url: str = OLLAMA_URL, model: str = CHAT_MODEL):
+    def __init__(self, ollama_url: str = LM_STUDIO_URL, model: str = CHAT_MODEL):
         """
-        Initialize Ollama client.
+        Initialize LM Studio client.
 
         Args:
-            ollama_url: URL of the Ollama server
+            ollama_url: URL of the LM Studio server
             model: Name of the chat model to use
 
         Raises:
-            LLMError: If Ollama connection fails
+            LLMError: If LM Studio connection fails
         """
         self.ollama_url = ollama_url.rstrip('/')
         self.model = model
@@ -58,18 +58,18 @@ class OllamaClient:
         payload = {
             "model": self.model,
             "messages": messages,
-            "stream": False,
-            "options": {
-                "temperature": temperature
-            }
+            "temperature": temperature,
         }
 
-        if max_tokens:
-            payload["options"]["num_predict"] = max_tokens
+        if max_tokens is not None:
+            payload["max_tokens"] = max_tokens
 
         try:
-            response = await self._call_ollama_api("/api/chat", payload)
-            return response.get("message", {}).get("content", "")
+            response = await self._call_ollama_api("/v1/chat/completions", payload)
+            choices = response.get("choices", [])
+            if not choices:
+                return ""
+            return choices[0].get("message", {}).get("content", "")
         except Exception as e:
             raise LLMError(f"Failed to generate response: {str(e)}")
 
@@ -95,36 +95,41 @@ class OllamaClient:
             "model": self.model,
             "messages": messages,
             "stream": True,
-            "options": {
-                "temperature": temperature
-            }
+            "temperature": temperature,
         }
 
         try:
-            url = f"{self.ollama_url}/api/chat"
+            url = f"{self.ollama_url}/v1/chat/completions"
             async with self.client.stream("POST", url, json=payload) as response:
                 response.raise_for_status()
                 async for line in response.aiter_lines():
-                    if line.strip():
-                        import json
-                        data = json.loads(line)
-                        if "message" in data:
-                            content = data["message"].get("content", "")
-                            if content:
-                                yield content
+                    if not line.strip():
+                        continue
+                    if line.startswith("data: "):
+                        data_str = line[len("data: "):].strip()
+                    else:
+                        data_str = line.strip()
+                    if data_str == "[DONE]":
+                        break
+                    import json
+                    data = json.loads(data_str)
+                    delta = data.get("choices", [{}])[0].get("delta", {})
+                    content = delta.get("content", "")
+                    if content:
+                        yield content
         except Exception as e:
             raise LLMError(f"Failed to generate streaming response: {str(e)}")
 
     def _build_messages(self, system_prompt: str, user_prompt: str) -> List[Dict]:
         """
-        Build messages list for Ollama chat API.
+        Build messages list for OpenAI-compatible chat API.
 
         Args:
             system_prompt: System prompt with character identity and knowledge
             user_prompt: User prompt with conversation context and task
 
         Returns:
-            List[Dict]: Messages in Ollama chat format
+            List[Dict]: Messages in OpenAI-compatible chat format
         """
         return [
             {"role": "system", "content": system_prompt},
@@ -139,18 +144,18 @@ class OllamaClient:
             bool: True if model is available, False otherwise
         """
         try:
-            response = await self._call_ollama_api("/api/tags", {})
-            models = response.get("models", [])
-            return any(model.get("name") == self.model for model in models)
+            response = await self._call_ollama_api("/v1/models", {})
+            models = response.get("data", [])
+            return any(model.get("id") == self.model for model in models)
         except Exception:
             return False
 
     async def _call_ollama_api(self, endpoint: str, payload: Dict) -> Dict:
         """
-        Internal method to call Ollama API.
+        Internal method to call LM Studio API.
 
         Args:
-            endpoint: API endpoint (e.g., '/api/generate')
+            endpoint: API endpoint (e.g., '/v1/chat/completions')
             payload: Request payload
 
         Returns:
@@ -161,7 +166,7 @@ class OllamaClient:
         """
         url = f"{self.ollama_url}{endpoint}"
         try:
-            if endpoint == "/api/tags":
+            if endpoint == "/v1/models":
                 response = await self.client.get(url)
             else:
                 response = await self.client.post(url, json=payload)
@@ -169,8 +174,8 @@ class OllamaClient:
             response.raise_for_status()
             return response.json()
         except httpx.HTTPStatusError as e:
-            raise LLMError(f"Ollama API returned error {e.response.status_code}: {e.response.text}")
+            raise LLMError(f"LM Studio API returned error {e.response.status_code}: {e.response.text}")
         except httpx.RequestError as e:
-            raise LLMError(f"Failed to connect to Ollama at {url}: {str(e)}")
+            raise LLMError(f"Failed to connect to LM Studio at {url}: {str(e)}")
         except Exception as e:
-            raise LLMError(f"Unexpected error calling Ollama API: {str(e)}")
+            raise LLMError(f"Unexpected error calling LM Studio API: {str(e)}")

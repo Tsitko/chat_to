@@ -420,3 +420,60 @@ async def get_group_messages(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve group messages: {str(e)}")
+
+
+@router.delete("/{group_id}/messages", status_code=204)
+async def clear_group_messages(
+    group_id: str,
+    group_repo: GroupRepository = Depends(get_group_repo),
+    message_repo = Depends(get_group_message_repo)
+):
+    """
+    Clear all messages for a group.
+
+    This endpoint deletes all message history for the specified group,
+    allowing users to start a fresh conversation. The group itself is not deleted.
+
+    Args:
+        group_id: Unique identifier of the group
+        group_repo: Group repository dependency
+        message_repo: Group message repository dependency
+
+    Returns:
+        Response: 204 No Content on success
+
+    Raises:
+        HTTPException 404: If group not found
+        HTTPException 500: If deletion fails
+
+    Notes:
+        - This operation is irreversible
+        - Only messages in the database are deleted
+        - Conversations KB is NOT cleared (intentional design decision)
+        - This matches the behavior of individual character "New Chat"
+    """
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        # Verify group exists
+        group = await group_repo.get_group_by_id(group_id)
+        if not group:
+            raise HTTPException(status_code=404, detail="Group not found")
+
+        # Log the operation
+        logger.info(f"Clearing all messages for group {group_id} ({group.name})")
+
+        # Delete all messages for this group
+        await message_repo.delete_messages_by_group(group_id)
+
+        logger.info(f"Successfully cleared messages for group {group_id}")
+
+        return Response(status_code=204)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to clear group messages for {group_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to clear group messages: {str(e)}")

@@ -8,14 +8,14 @@
 
 | File | Description |
 |------|-------------|
-| `ollama_client.py` | Ollama API client for chat completions |
+| `ollama_client.py` | LM Studio OpenAI-compatible client for chat completions |
 | `prompt_builder.py` | Build system and user prompts with context and emotions |
 | `emotion_detector.py` | Detect character emotions using LLM analysis with KB context |
 
 ## Key Components
 
 ### `ollama_client.py`
-**Purpose:** Generate chat responses via Ollama
+**Purpose:** Generate chat responses via LM Studio
 
 **Key Class:** `OllamaClient`
 
@@ -24,10 +24,10 @@
 - `generate_streaming_response(system_prompt: str, user_prompt: str, temperature: float) -> AsyncGenerator`
 
 **Model Used:**
-- Chat model: `qwen2.5:7b` (from config)
+- Chat model: `qwen/qwen3-30b-a3b-2507` (from config)
 
 **Implementation:**
-- Uses Ollama HTTP API (`/api/chat` endpoint)
+- Uses OpenAI-compatible HTTP API (`/v1/chat/completions` endpoint)
 - Supports streaming and non-streaming responses
 - Async HTTP client via `httpx`
 
@@ -118,12 +118,12 @@ joy - радость. Он тем больше, чем сильнее сообщ
 ```python
 # OllamaClient
 class OllamaClient:
-    def __init__(self, ollama_base_url: str = "http://localhost:11434"):
+    def __init__(self, ollama_base_url: str = "http://192.168.1.16:1234"):
         """
-        Initialize Ollama client.
+        Initialize LM Studio client.
 
         Args:
-            ollama_base_url: Ollama server URL
+            ollama_base_url: LM Studio server URL
         """
 
     async def generate_response(
