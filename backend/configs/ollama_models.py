@@ -1,14 +1,12 @@
 """
-Configuration for Ollama model names.
+Configuration for LLM model names.
 
 This module centralizes all model name configurations for the application.
+All models are served via LM Studio.
 """
 
 # Chat LLM model for generating responses
 CHAT_MODEL: str = "qwen/qwen3-30b-a3b-2507"
 
-# Embedding model for indexing documents
-EMBEDDINGS_INDEXER_MODEL: str = "qwen-embeddings-indexer"
-
-# Embedding model for searching knowledge base
-EMBEDDINGS_KB_MODEL: str = "qwen-embeddings-kb"
+# Embedding model for both indexing and searching (same model)
+EMBEDDING_MODEL: str = "text-embedding-qwen3-embedding-4b"

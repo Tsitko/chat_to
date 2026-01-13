@@ -1,38 +1,38 @@
 """
-Embedding generator using Ollama models.
+Embedding generator using LM Studio.
 
 This module provides functionality for generating embeddings from text.
-Depends on: Ollama API, configs
+Depends on: LM Studio API, configs
 """
 
 from typing import List
 import httpx
 
-from configs import OLLAMA_URL, EMBEDDINGS_INDEXER_MODEL, EMBEDDINGS_KB_MODEL
+from configs import LM_STUDIO_URL, EMBEDDING_MODEL
 from exceptions import EmbeddingError
 
 
 class EmbeddingGenerator:
     """
-    Generates embeddings using Ollama embedding models.
+    Generates embeddings using LM Studio.
 
     This class provides methods for generating embeddings for both
     indexing (books) and searching (knowledge base queries).
+    Uses the same model for both operations via LM Studio API.
     """
 
-    def __init__(self, ollama_url: str = OLLAMA_URL):
+    def __init__(self, lm_studio_url: str = LM_STUDIO_URL):
         """
         Initialize the embedding generator.
 
         Args:
-            ollama_url: URL of the Ollama server
+            lm_studio_url: URL of the LM Studio server
 
         Raises:
-            EmbeddingError: If Ollama connection fails
+            EmbeddingError: If LM Studio connection fails
         """
-        self.ollama_url = ollama_url
-        self.indexing_model = EMBEDDINGS_INDEXER_MODEL
-        self.query_model = EMBEDDINGS_KB_MODEL
+        self.lm_studio_url = lm_studio_url.rstrip('/')
+        self.model = EMBEDDING_MODEL
 
     async def generate_indexing_embedding(self, text: str) -> List[float]:
         """
@@ -47,7 +47,7 @@ class EmbeddingGenerator:
         Raises:
             EmbeddingError: If embedding generation fails
         """
-        return await self._call_ollama_api(self.indexing_model, text)
+        return await self._call_lm_studio_api(text)
 
     async def generate_query_embedding(self, text: str) -> List[float]:
         """
@@ -62,7 +62,7 @@ class EmbeddingGenerator:
         Raises:
             EmbeddingError: If embedding generation fails
         """
-        return await self._call_ollama_api(self.query_model, text)
+        return await self._call_lm_studio_api(text)
 
     async def generate_batch_embeddings(self, texts: List[str],
                                        for_indexing: bool = True) -> List[List[float]]:
@@ -71,7 +71,7 @@ class EmbeddingGenerator:
 
         Args:
             texts: List of texts to generate embeddings for
-            for_indexing: If True, use indexing model; otherwise use query model
+            for_indexing: Ignored - same model used for both operations
 
         Returns:
             List[List[float]]: List of embedding vectors
@@ -79,21 +79,19 @@ class EmbeddingGenerator:
         Raises:
             EmbeddingError: If batch embedding generation fails
         """
-        model = self.indexing_model if for_indexing else self.query_model
         embeddings = []
 
         for text in texts:
-            embedding = await self._call_ollama_api(model, text)
+            embedding = await self._call_lm_studio_api(text)
             embeddings.append(embedding)
 
         return embeddings
 
-    async def _call_ollama_api(self, model: str, text: str) -> List[float]:
+    async def _call_lm_studio_api(self, text: str) -> List[float]:
         """
-        Internal method to call Ollama API for embedding generation.
+        Internal method to call LM Studio API for embedding generation.
 
         Args:
-            model: Name of the embedding model
             text: Text to generate embedding for
 
         Returns:
@@ -108,35 +106,34 @@ class EmbeddingGenerator:
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.post(
-                    f"{self.ollama_url}/api/embeddings",
-                    json={"model": model, "prompt": text}
+                    f"{self.lm_studio_url}/v1/embeddings",
+                    json={"model": self.model, "input": text}
                 )
                 response.raise_for_status()
                 data = response.json()
-                return data["embedding"]
+
+                # LM Studio uses OpenAI-compatible format: {"data": [{"embedding": [...]}]}
+                return data["data"][0]["embedding"]
         except httpx.HTTPError as e:
-            raise EmbeddingError(f"HTTP error calling Ollama API: {str(e)}")
-        except KeyError as e:
-            raise EmbeddingError(f"Unexpected response format from Ollama: {str(e)}")
+            raise EmbeddingError(f"HTTP error calling LM Studio API: {str(e)}")
+        except (KeyError, IndexError) as e:
+            raise EmbeddingError(f"Unexpected response format from LM Studio: {str(e)}")
         except Exception as e:
             raise EmbeddingError(f"Failed to generate embedding: {str(e)}")
 
-    async def check_model_availability(self, model: str) -> bool:
+    async def check_model_availability(self) -> bool:
         """
-        Check if a model is available in Ollama.
-
-        Args:
-            model: Name of the model to check
+        Check if the embedding model is available in LM Studio.
 
         Returns:
             bool: True if model is available, False otherwise
         """
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(f"{self.ollama_url}/api/tags")
+                response = await client.get(f"{self.lm_studio_url}/v1/models")
                 response.raise_for_status()
                 data = response.json()
-                models = [m["name"] for m in data.get("models", [])]
-                return model in models
+                models = [m.get("id") for m in data.get("data", [])]
+                return self.model in models
         except Exception:
             return False

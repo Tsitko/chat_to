@@ -6,13 +6,11 @@ This package contains all configuration modules for the application.
 
 from .ollama_models import (
     CHAT_MODEL,
-    EMBEDDINGS_INDEXER_MODEL,
-    EMBEDDINGS_KB_MODEL,
+    EMBEDDING_MODEL,
 )
 from .server_config import (
     HOST,
     PORT,
-    OLLAMA_URL,
     LM_STUDIO_URL,
     MAX_UPLOAD_SIZE,
     ALLOWED_BOOK_EXTENSIONS,
@@ -51,11 +49,9 @@ from .group_chat_config import (
 
 __all__ = [
     "CHAT_MODEL",
-    "EMBEDDINGS_INDEXER_MODEL",
-    "EMBEDDINGS_KB_MODEL",
+    "EMBEDDING_MODEL",
     "HOST",
     "PORT",
-    "OLLAMA_URL",
     "LM_STUDIO_URL",
     "MAX_UPLOAD_SIZE",
     "ALLOWED_BOOK_EXTENSIONS",
