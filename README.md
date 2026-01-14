@@ -372,4 +372,4 @@ ollama pull qwen-embeddings-kb
 
 ## Контакты
 
-[Specify contact information]
+denis.tsitko@gmail.com
