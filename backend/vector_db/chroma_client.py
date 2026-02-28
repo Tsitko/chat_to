@@ -148,7 +148,7 @@ class ChromaClient:
         """
         try:
             collections = self.client.list_collections()
-            return any(col.name == collection_name for col in collections)
+            return collection_name in collections
         except Exception:
             return False
 

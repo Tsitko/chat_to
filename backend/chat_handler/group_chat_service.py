@@ -161,13 +161,15 @@ class GroupChatService:
             for i, msg in enumerate(message_window):
                 print(f"[MESSAGE_WINDOW] {i}: role={msg.role}, char_name={getattr(msg, 'character_name', None)}")
 
-            # Process character with timeout
+            # Process character with timeout (compatible with Python 3.9+)
             try:
-                async with asyncio.timeout(CHARACTER_TIMEOUT_SECONDS):
-                    response = await self._process_character(
+                response = await asyncio.wait_for(
+                    self._process_character(
                         character, user_message, message_window,
                         kb_managers[character.id], ollama_client
-                    )
+                    ),
+                    timeout=CHARACTER_TIMEOUT_SECONDS
+                )
             except asyncio.TimeoutError:
                 response = CharacterResponse(
                     character_id=character.id,

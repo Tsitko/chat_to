@@ -88,13 +88,36 @@
 
 ### Запуск приложения
 
-**Опция 1: Используйте скрипт запуска (Linux/Mac):**
-```bash
-chmod +x start.sh
-./start.sh
+**Опция 1: Автозапуск при логине (macOS LaunchAgents):**
+
+LaunchAgents уже настроены и запускаются автоматически при входе в систему:
+```
+~/Library/LaunchAgents/com.chatto.backend.plist
+~/Library/LaunchAgents/com.chatto.frontend.plist
 ```
 
-**Опция 2: Запустите вручную в двух терминалах:**
+Управление вручную:
+```bash
+# Остановить
+launchctl unload ~/Library/LaunchAgents/com.chatto.backend.plist
+launchctl unload ~/Library/LaunchAgents/com.chatto.frontend.plist
+
+# Запустить
+launchctl load ~/Library/LaunchAgents/com.chatto.backend.plist
+launchctl load ~/Library/LaunchAgents/com.chatto.frontend.plist
+
+# Логи
+tail -f ~/Projects/chat_to/logs/backend_stdout.log
+tail -f ~/Projects/chat_to/logs/frontend_stdout.log
+```
+
+**Опция 2: Запустите вручную скриптами:**
+```bash
+./start_backend.sh   # Backend (порт 1310)
+./start_frontend.sh  # Frontend (порт 1710)
+```
+
+**Опция 3: Запустите вручную в двух терминалах:**
 
 Терминал 1 - Backend:
 ```bash
@@ -203,6 +226,9 @@ chat_to/
 ├── tests/             # Тесты (unit, integration, e2e)
 ├── data/              # Загруженные файлы (avatars, books)
 ├── chroma/            # ChromaDB данные
+├── logs/              # Логи backend и frontend (LaunchAgents)
+├── start_backend.sh   # Скрипт запуска backend
+├── start_frontend.sh  # Скрипт запуска frontend
 ├── Гегель/            # Тестовые данные
 └── venv/              # Python окружение
 ```

@@ -169,9 +169,11 @@ async def send_group_message(
     from configs.group_chat_config import TOTAL_GROUP_TIMEOUT_SECONDS
 
     try:
-        # Process group message with total timeout
-        async with asyncio.timeout(TOTAL_GROUP_TIMEOUT_SECONDS):
-            response = await service.process_group_message(request)
+        # Process group message with total timeout (compatible with Python 3.9+)
+        response = await asyncio.wait_for(
+            service.process_group_message(request),
+            timeout=TOTAL_GROUP_TIMEOUT_SECONDS
+        )
 
         return response
 

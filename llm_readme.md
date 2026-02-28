@@ -1,6 +1,6 @@
 # Project Navigation Index - Chat To Historical Figures
 
-**Project Status (2025-12-19):** Backend 100% complete | Frontend 100% complete | Group Chat FULLY WORKING with Persistence | Emotions + Dynamic Temperature | Knowledge Base Integration
+**Project Status (2026-02-28):** Backend 100% complete | Frontend 100% complete | Group Chat FULLY WORKING with Persistence | Emotions + Dynamic Temperature | Knowledge Base Integration | macOS autostart via LaunchAgents
 
 ## Module Responsibility Matrix
 
@@ -151,6 +151,15 @@ Level 5 (Depends on Level 0-4):
   - In-memory message window (not DB queries during generation)
   - Improved prompts for personalized responses
   - Knowledge base integration per character
+  - `asyncio.timeout` → `asyncio.wait_for` for Python 3.9 compatibility (in route + service)
+  - ChromaDB upgraded 0.4.18 → 1.5.1, fixed `list_collections()` API
+
+### Autostart (macOS)
+- ✅ `start_backend.sh` — launch script for Python backend
+- ✅ `start_frontend.sh` — launch script for Vite dev server
+- ✅ `~/Library/LaunchAgents/com.chatto.backend.plist` — starts at login, KeepAlive
+- ✅ `~/Library/LaunchAgents/com.chatto.frontend.plist` — starts at login, KeepAlive
+- ✅ Logs: `logs/backend_stdout.log`, `logs/backend_stderr.log`, etc.
 
 ## FLRM Coverage Status
 
